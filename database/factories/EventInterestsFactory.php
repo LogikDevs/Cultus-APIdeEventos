@@ -17,13 +17,13 @@ class EventInterestsFactory extends Factory
                 $interest = collect($interests)->random();
                 return [
                     'fk_id_label' => $interest['id_label'],
-                    'fk_id_event' => Events::all()->random()->id_event
+                    'fk_id_event' => Events::all()->random()->id
                 ];
             } else {
                 return [];
             }
         return [
-            'fk_id_event' => Events::all()->random()->id_event,
+            'fk_id_event' => Events::all()->random()->id,
             'fk_id_label' => interest::all()->random()->id_label
         ];
     }
