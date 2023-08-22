@@ -12,7 +12,5 @@ class DatabaseSeeder extends Seeder
         $this->call(EventsSeeder::class);
         $this->call(EventInterestsSeeder::class);
         $this->call(ParticipantsSeeder::class);
-        $this->call(PrivateEventsSeeder::class);
-        $this->call(PublicEventsSeeder::class);
     }
 }
