@@ -25,5 +25,4 @@ class Participants extends Model
         'fk_id_event',
         'fk_id_label'
     ];
-    use HasFactory;
 }

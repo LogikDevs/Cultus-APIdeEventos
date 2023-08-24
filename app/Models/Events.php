@@ -26,6 +26,7 @@ class Events extends Model
         'description',
         'text',
         'start_date',
-        'end_date'
+        'end_date',
+        'private'
     ];
 }

@@ -13,6 +13,7 @@ class Events extends Migration
             $table->string("name");
             $table->string("description")->nullable();
             $table->string("text");
+            $table->string("cover")->nullable();
             $table->dateTime("start_date");
             $table->dateTime("end_date");
             $table->boolean("private");
