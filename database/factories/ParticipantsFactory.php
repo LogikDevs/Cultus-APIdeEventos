@@ -12,7 +12,7 @@ class ParticipantsFactory extends Factory
     public function definition()
     {
         return [
-            'fk_id_event' => Events::all()->random()->id,
+            'fk_id_event' => Events::all()->random()->id_event,
             'fk_id_user' => User::all()->random()->id,
         ];
     }

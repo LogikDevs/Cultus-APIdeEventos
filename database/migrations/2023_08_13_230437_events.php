@@ -9,14 +9,13 @@ class Events extends Migration
     public function up()
     {
         Schema::create('events', function (Blueprint $table) {
-            $table->id();
+            $table->id("id_event");
             $table->string("name");
             $table->string("description")->nullable();
             $table->string("text");
-            $table->string("cover")->nullable();
             $table->dateTime("start_date");
             $table->dateTime("end_date");
-            $table->boolean("private");
+            $table->string("privacity");
 
             $table->timestamps();
             $table->softDeletes();
