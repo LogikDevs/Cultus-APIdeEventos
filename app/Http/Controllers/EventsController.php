@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Validator;
 
 class EventsController extends Controller
 {
-
+    public function List(Request $request) {
+        return Events::all();
+    }
 /*
 FUNCIONALLLLLLLLLLLLLLLLLLLL
     public function Create(request $request){
@@ -48,11 +50,12 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 */
 
     public function CreateEvent(Request $request) {
+        date_default_timezone_set('America/Montevideo');
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'description' => 'nullable | max:200',
             'text' => 'required | max:600',
-            'cover' => 'required | file | mimes:jpeg,png,mp4 | max:2048',
+            'cover' => 'nullable | file | mimes:jpeg,png,mp4 | max:2048',
             'start_date' => 'required | date | after_or_equal:now',
             'end_date' => 'required | date | after:start_date',
             'private' => 'required | boolean',
@@ -62,23 +65,21 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
             return response()->json($validator->errors(), 400);
         }
 
-        return $this->SaveEvent($request);
-        //$this->SaveInterests($request);
+        $event = $this->SaveEvent($request);
+        //$interests = $this->SaveInterests($request);
+        return $event;
     }
 
     public function SaveEvent(request $request) {
     //GET cover
-        $file = $request->file('cover_file');
+        $file = $request->file('cover');
         $path = $file->store('public/cover_event');
-        $mediaEvent->cover = $path;
-
-
 
         $newEvent = new Events();
         $newEvent -> name = $request->input('name');
         $newEvent -> description = $request->input('description');
         $newEvent -> text = $request->input('text');
-        $newEvent -> cover = $mediaEvent;
+        $newEvent -> cover = $path;
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
@@ -95,7 +96,6 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 
 
     public function SaveInterests(Request $request) {
-        echo "oliwi";
     /*
         $validation = $request->validate([
             'fk_id_label'=>'required | exists:interest_label,id_label',

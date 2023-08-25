@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
+Route::get('/events', [EventsController::class, 'List']);
 Route::post('/events/create', [EventsController::class, 'CreateEvent']);
 Route::post('/event/interests/create', [EventInterestsController::class, 'CreateEventInterests']);
 
