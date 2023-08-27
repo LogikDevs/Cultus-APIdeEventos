@@ -98,12 +98,22 @@ class EventsController extends Controller
 
 
 
+
     public function ListFollowed($id_user) {
-    //DEVUELVE CORRECTO, NADA MAS ME QUEDA MOSTRAR EL EVENTO
+        $events = [];
         $followedEvents = Participants::where('fk_id_user', $id_user)->get();
         foreach ($followedEvents as $f) {
-            $event = $this->GetEvent($f['fk_id_event']); //aca ya traigo todos los eventos que contienen esos intereses
+            $event = $this->GetEvent($f['fk_id_event']);
+            foreach ($event as $e) {
+                $admin = $this->GetAdmin($e['id']);
+                $interests = $this->GetInterestsFromEvent($e['id']);
+                $event['admin'] = $admin;
+                $event['interests'] = $interests; 
+            }
+
+            $events[] = $event;
         }
+        return $events;
     }
 
 
