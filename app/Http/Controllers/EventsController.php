@@ -18,6 +18,7 @@ class EventsController extends Controller
 
     public function ListInterested($id_user) {
         $events = [];
+        $eventU = [];
         $interests = $this->GetUserInterests($id_user);
 
         foreach ($interests as $i) {
@@ -25,11 +26,18 @@ class EventsController extends Controller
             foreach ($eventInterests as $e) {
                 $event = $this->GetEvent($e['fk_id_event']);
 
+                if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
+                    continue;
+                }
+                if ($this->UserParticipatesEvent($id_user, $event[0]['id'])) {
+                    continue;
+                }
+                
                 $eventU[$event[0]['id']] = $event[0];
                 $admin = $this->GetAdmin($event[0]['id']);
                 $interests = $this->GetInterestsFromEvent($event[0]['id']);
                 $eventU[$event[0]['id']]['admin'] = $admin;
-                $eventU[$event[0]['id']]['interests'] = $interests; 
+                $eventU[$event[0]['id']]['interests'] = $interests;
             }
         }
         $events = array_values($eventU);
@@ -84,10 +92,12 @@ class EventsController extends Controller
         return $int;
     }
 
-
-
-
-
+    public function UserParticipatesEvent($id_user, $event_id) {
+        $participant = Participants::where('fk_id_user', $id_user)
+                                  ->where('fk_id_event', $event_id)
+                                  ->first();
+        return !is_null($participant);
+    }
 
 
 
