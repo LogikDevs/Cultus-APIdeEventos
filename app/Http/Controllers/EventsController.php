@@ -197,7 +197,8 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 */
 
     public function CreateEvent(Request $request) {
-        date_default_timezone_set('America/Montevideo');
+        //date_default_timezone_set('America/Montevideo');
+        $eventAll = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'description' => 'nullable | max:200',
@@ -206,15 +207,22 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
             'start_date' => 'required | date | after_or_equal:now',
             'end_date' => 'required | date | after:start_date',
             'private' => 'required | boolean',
+            'id_user' => 'required | exists:users,id'
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
+    
         $event = $this->SaveEvent($request);
-        //$interests = $this->SaveInterests($request);
-        return $event;
+        $admin = $this->SaveAdmin($request, $event);
+        //$interests = $this->SaveInterests($request, $event);
+        
+        $newCreatedEvent = $event;
+        $newCreatedEvent['admin'] = $this->GetAdmin($event['id_event']);
+        //$newCreatedEvent['interests'] = $this->GetInterestsFromEvent($event['id_event']);
+        return $newCreatedEvent;
     }
 
     public function SaveEvent(request $request) {
@@ -235,6 +243,15 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
         return $newEvent;
     }
 
+    public function SaveAdmin(request $request, $event) {
+        $newAdmin = new Participants();
+        $newAdmin -> fk_id_user = $request->input('id_user');
+        $newAdmin -> fk_id_event = $event->id_event;
+        $newAdmin -> rol = 'admin';
+        $newAdmin -> save();
+
+        return $newAdmin;
+    }
 
 
 
@@ -242,7 +259,7 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 
 
 
-    public function SaveInterests(Request $request) {
+    public function SaveInterests(Request $request, $event) {
     /*
         $validation = $request->validate([
             'fk_id_label'=>'required | exists:interest_label,id_label',
