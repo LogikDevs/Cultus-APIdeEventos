@@ -155,49 +155,7 @@ class EventsController extends Controller
 
 
 
-
-
-
-
-/*
-FUNCIONALLLLLLLLLLLLLLLLLLLL
-    public function Create(request $request){
-        $validation = self::CreateValidation($request);
-        if ($validation->fails())
-        return $validation->errors();
-    
-        return $this -> CreateRequest($request);
-    }
-
-    public function CreateEvents(request $request){
-        $validation = Validator::make($request->all(),[
-            'name' => 'required',
-            'description' => 'nullable | max:200',
-            'text' => 'required | max:600',
-            'start_date' => 'required | date | after_or_equal:now',
-            'end_date' => 'required | date | after:start_date',
-            'private' => 'required | boolean'
-        ]);
-        return $validation;
-    }
-
-    public function CreateRequest(request $request)
-    {
-        $newEvent = new Events();
-        $newEvent -> name = $request->input('name');
-        $newEvent -> description = $request->input('description');
-        $newEvent -> text = $request->input('text');
-        $newEvent -> start_date = $request->input('start_date');
-        $newEvent -> end_date = $request->input('end_date');
-        $newEvent -> private = $request->input('private');
-        $newEvent -> save();
-            
-        return $newEvent;
-    }
-*/
-
     public function CreateEvent(Request $request) {
-        //date_default_timezone_set('America/Montevideo');
         $eventAll = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required',
@@ -226,15 +184,18 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
     }
 
     public function SaveEvent(request $request) {
-    //GET cover
-        $file = $request->file('cover');
-        $path = $file->store('public/cover_event');
-
         $newEvent = new Events();
+
+        if ($request->hasFile('cover')){
+            $image = $request->file('cover');
+            $imageExtension = $image->getClientOriginalExtension();
+            $path = $image->store('/public/cover_event');
+            $newEvent -> cover = basename($path);
+        }
+        
         $newEvent -> name = $request->input('name');
         $newEvent -> description = $request->input('description');
         $newEvent -> text = $request->input('text');
-        $newEvent -> cover = $path;
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
@@ -253,13 +214,9 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
         return $newAdmin;
     }
 
-
-
-
-
-
-
-    public function SaveInterests(Request $request, $event) {
+/*
+    public function SaveInterests($labels, $event) {
+        foreach ($labels as $l) {
     /*
         $validation = $request->validate([
             'fk_id_label'=>'required | exists:interest_label,id_label',
@@ -268,8 +225,9 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 
         $characterize = Characterizes::create($validation);
         return response()->json($characterize, 201);
-    */
+    /
     }
+*/
 
 
 }
