@@ -155,49 +155,8 @@ class EventsController extends Controller
 
 
 
-
-
-
-
-/*
-FUNCIONALLLLLLLLLLLLLLLLLLLL
-    public function Create(request $request){
-        $validation = self::CreateValidation($request);
-        if ($validation->fails())
-        return $validation->errors();
-    
-        return $this -> CreateRequest($request);
-    }
-
-    public function CreateEvents(request $request){
-        $validation = Validator::make($request->all(),[
-            'name' => 'required',
-            'description' => 'nullable | max:200',
-            'text' => 'required | max:600',
-            'start_date' => 'required | date | after_or_equal:now',
-            'end_date' => 'required | date | after:start_date',
-            'private' => 'required | boolean'
-        ]);
-        return $validation;
-    }
-
-    public function CreateRequest(request $request)
-    {
-        $newEvent = new Events();
-        $newEvent -> name = $request->input('name');
-        $newEvent -> description = $request->input('description');
-        $newEvent -> text = $request->input('text');
-        $newEvent -> start_date = $request->input('start_date');
-        $newEvent -> end_date = $request->input('end_date');
-        $newEvent -> private = $request->input('private');
-        $newEvent -> save();
-            
-        return $newEvent;
-    }
-*/
-
     public function CreateEvent(Request $request) {
-        date_default_timezone_set('America/Montevideo');
+        $eventAll = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'description' => 'nullable | max:200',
@@ -206,27 +165,37 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
             'start_date' => 'required | date | after_or_equal:now',
             'end_date' => 'required | date | after:start_date',
             'private' => 'required | boolean',
+            'id_user' => 'required | exists:users,id'
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
+    
         $event = $this->SaveEvent($request);
-        //$interests = $this->SaveInterests($request);
-        return $event;
+        $admin = $this->SaveAdmin($request, $event);
+        //$interests = $this->SaveInterests($request, $event);
+        
+        $newCreatedEvent = $event;
+        $newCreatedEvent['admin'] = $this->GetAdmin($event['id_event']);
+        //$newCreatedEvent['interests'] = $this->GetInterestsFromEvent($event['id_event']);
+        return $newCreatedEvent;
     }
 
     public function SaveEvent(request $request) {
-    //GET cover
-        $file = $request->file('cover');
-        $path = $file->store('public/cover_event');
-
         $newEvent = new Events();
+
+        if ($request->hasFile('cover')){
+            $image = $request->file('cover');
+            $imageExtension = $image->getClientOriginalExtension();
+            $path = $image->store('/public/cover_event');
+            $newEvent -> cover = basename($path);
+        }
+        
         $newEvent -> name = $request->input('name');
         $newEvent -> description = $request->input('description');
         $newEvent -> text = $request->input('text');
-        $newEvent -> cover = $path;
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
@@ -235,14 +204,19 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
         return $newEvent;
     }
 
+    public function SaveAdmin(request $request, $event) {
+        $newAdmin = new Participants();
+        $newAdmin -> fk_id_user = $request->input('id_user');
+        $newAdmin -> fk_id_event = $event->id_event;
+        $newAdmin -> rol = 'admin';
+        $newAdmin -> save();
 
+        return $newAdmin;
+    }
 
-
-
-
-
-
-    public function SaveInterests(Request $request) {
+/*
+    public function SaveInterests($labels, $event) {
+        foreach ($labels as $l) {
     /*
         $validation = $request->validate([
             'fk_id_label'=>'required | exists:interest_label,id_label',
@@ -251,8 +225,9 @@ FUNCIONALLLLLLLLLLLLLLLLLLLL
 
         $characterize = Characterizes::create($validation);
         return response()->json($characterize, 201);
-    */
+    /
     }
+*/
 
 
 }
