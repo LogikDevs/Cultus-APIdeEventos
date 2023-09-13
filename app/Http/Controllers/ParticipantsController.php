@@ -18,7 +18,6 @@ class ParticipantsController extends Controller
         $validator = Validator::make($request->all(), [
             'fk_id_event' => 'required | exists:events,id',
             'fk_id_user' => 'required | exists:users,id',
-            //'rol' => 'required | in:follower,moderator,admin'
         ]);
 
         if ($validator->fails()) {
@@ -31,11 +30,10 @@ class ParticipantsController extends Controller
     public function GetNewParticipant(request $request) {
         $fk_id_event = $request->input('fk_id_event');
         $fk_id_user = $request->input('fk_id_user');
-        //$rol = $request->input('rol');
 
         $existingParticipant = Participants::where('fk_id_event', $fk_id_event)
             ->where('fk_id_user', $fk_id_user)
-            ->withTrashed()//filas con deleted_at no nulo
+            ->withTrashed()
             ->first();
 
         if ($existingParticipant) {
@@ -50,7 +48,6 @@ class ParticipantsController extends Controller
         $newParticipant -> fk_id_event = $fk_id_event;
         $newParticipant -> fk_id_user = $fk_id_user;
         $newParticipant -> rol = 'follower';
-        //$newParticipant -> rol = $rol;
         $newParticipant -> save();
         return $newParticipant;
     }
