@@ -19,8 +19,10 @@ class ParticipantsController extends Controller
         $participants = [];
         $par = Participants::where('fk_id_event', $id_event)->get();
         foreach ($par as $p) {
+            $rol = $p['rol'];
             $fk_id_user = $p['fk_id_user'];
             $user = $this->GetUser($fk_id_user);
+            $user['rol'] = $rol;
             array_push($participants, $user);
         }
 
