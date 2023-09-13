@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Events;
 use App\Models\Participants;
 use App\Http\Controllers\Controller;
@@ -12,6 +13,23 @@ class ParticipantsController extends Controller
 {
     public function List(Request $request) {
         return Participants::all();
+    }
+    
+    public function ListParticipants($id_event) {
+        $participants = [];
+        $par = Participants::where('fk_id_event', $id_event)->get();
+        foreach ($par as $p) {
+            $fk_id_user = $p['fk_id_user'];
+            $user = $this->GetUser($fk_id_user);
+            array_push($participants, $user);
+        }
+
+        return $participants;
+    }
+
+    private function GetUser($fk_id_user) {
+        $user = User::find($fk_id_user);
+        return $user->only(['name', 'surname', 'profile_pic']);
     }
 
     public function CreateParticipant(Request $request) {
