@@ -16,10 +16,36 @@ class EventsController extends Controller
         return Events::all();
     }
 
-    public function ListInterested($id_user) {
+    public function ListFollowed(Request $request) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        $id_user = $response['id'];
+
+        $followedEvents = Participants::where('fk_id_user', $id_user)->get();
+        $events = [];
+
+        foreach ($followedEvents as $f) {
+            $event = $this->GetEvent($f['fk_id_event']);
+            foreach ($event as $e) {
+                $admin = $this->GetAdmin($e['id']);
+                $interests = $this->GetInterestsFromEvent($e['id'], $tokenHeader);
+                $event['admin'] = $admin;
+                $event['interests'] = $interests; 
+            }
+
+            $events[] = $event;
+        }
+        return $events;
+    }
+
+    public function ListInterested(Request $request) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        $id_user = $response['id'];
+
         $events = [];
         $eventU = [];
-        $interests = $this->GetUserInterests($id_user);
+        $interests = $this->GetUserInterests($request, $id_user);
 
         foreach ($interests as $i) {
             $eventInterests = $this->GetEventInterests($i['id_label']);
@@ -35,7 +61,7 @@ class EventsController extends Controller
                 
                 $eventU[$event[0]['id']] = $event[0];
                 $admin = $this->GetAdmin($event[0]['id']);
-                $interests = $this->GetInterestsFromEvent($event[0]['id']);
+                $interests = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
                 $eventU[$event[0]['id']]['admin'] = $admin;
                 $eventU[$event[0]['id']]['interests'] = $interests;
             }
@@ -44,9 +70,11 @@ class EventsController extends Controller
         return $events;
     }
 
-    public function GetUserInterests($id_user) {
-        $route = 'http://localhost:8000/api/v1/likes/user/' . $id_user . '/';
-        $response = Http::get($route);
+    public function GetUserInterests(Request $request, $id_user) {
+        $route = getenv("API_AUTH_URL") . "/api/v1/likes/user/$id_user";
+
+        $tokenHeader = [ "Authorization" => $request->header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get($route);
 
         if ($response->successful()) {
             return $response->json()['interests'];
@@ -75,17 +103,17 @@ class EventsController extends Controller
         return null;
     }
 
-    public function GetInterestsFromEvent($fk_id_event) {
+    public function GetInterestsFromEvent($fk_id_event, $tokenHeader) {
         $eventInterest = EventInterests::where('fk_id_event', $fk_id_event)->get();
         $int = [];
-        return $this->GetInterestName($eventInterest, $int);
+        return $this->GetInterestName($eventInterest, $int, $tokenHeader);
     }
 
-    public function GetInterestName($eventInterest, $int) {
+    public function GetInterestName($eventInterest, $int, $tokenHeader) {
         foreach ($eventInterest as $a) {
             $fk_id_label = $a['fk_id_label'];
-            $ruta = 'http://localhost:8000/api/v1/interest/' . $fk_id_label;
-            $response = Http::get($ruta);
+            $ruta = getenv("API_AUTH_URL") . "/api/v1/interest/$fk_id_label";
+            $response = Http::withHeaders($tokenHeader)->get($ruta);
             $int[] = $response['interest'];
         }
 
@@ -98,56 +126,6 @@ class EventsController extends Controller
                                   ->first();
         return !is_null($participant);
     }
-
-
-
-
-
-
-
-
-
-
-
-    public function ListFollowed($id_user) {
-        $events = [];
-        $followedEvents = Participants::where('fk_id_user', $id_user)->get();
-        foreach ($followedEvents as $f) {
-            $event = $this->GetEvent($f['fk_id_event']);
-            foreach ($event as $e) {
-                $admin = $this->GetAdmin($e['id']);
-                $interests = $this->GetInterestsFromEvent($e['id']);
-                $event['admin'] = $admin;
-                $event['interests'] = $interests; 
-            }
-
-            $events[] = $event;
-        }
-        return $events;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
