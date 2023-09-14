@@ -16,13 +16,18 @@ class EventsController extends Controller
         return Events::all();
     }
 
-    public function ListInterested($id_user) {
+    public function ListInterested(Request $request) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        $id_user = $response['id'];
+
         $events = [];
         $eventU = [];
-        $interests = $this->GetUserInterests($id_user);
+        $interests = $this->GetUserInterests($request, $id_user);
 
         foreach ($interests as $i) {
             $eventInterests = $this->GetEventInterests($i['id_label']);
+            //return $eventInterests;
             foreach ($eventInterests as $e) {
                 $event = $this->GetEvent($e['fk_id_event']);
 
@@ -44,9 +49,11 @@ class EventsController extends Controller
         return $events;
     }
 
-    public function GetUserInterests($id_user) {
-        $route = 'http://localhost:8000/api/v1/likes/user/' . $id_user . '/';
-        $response = Http::get($route);
+    public function GetUserInterests(Request $request, $id_user) {
+        $route = getenv("API_AUTH_URL") . "/api/v1/likes/user/$id_user";
+
+        $tokenHeader = [ "Authorization" => $request->header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get($route);
 
         if ($response->successful()) {
             return $response->json()['interests'];
@@ -82,14 +89,23 @@ class EventsController extends Controller
     }
 
     public function GetInterestName($eventInterest, $int) {
+        $interests = [];
+
         foreach ($eventInterest as $a) {
             $fk_id_label = $a['fk_id_label'];
-            $ruta = 'http://localhost:8000/api/v1/interest/' . $fk_id_label;
+            $ruta = getenv("API_AUTH_URL") . "/api/v1/interest/$fk_id_label";
+
             $response = Http::get($ruta);
-            $int[] = $response['interest'];
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['interest'])) {
+                    $interests[] = $data['interest'];
+                }
+            }
         }
 
-        return $int;
+        return $interests;
     }
 
     public function UserParticipatesEvent($id_user, $event_id) {
