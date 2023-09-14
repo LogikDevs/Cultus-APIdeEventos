@@ -29,8 +29,8 @@ Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
     Route::post('/event/create', [EventsController::class, 'CreateEvent']);
     Route::post('/event/interests/create', [EventInterestsController::class, 'CreateEventInterests']);
 
-    Route::get('/events/participants', [ParticipantsController::class, 'List']);
-    Route::get('/event/participants/{id_event}', [ParticipantsController::class, 'ListParticipants']);
+    Route::get('/participants', [ParticipantsController::class, 'List']);
+    Route::get('/participants/{id_event}', [ParticipantsController::class, 'ListParticipants']);
     Route::post('/events/participants/create', [ParticipantsController::class, 'CreateParticipant']);
     Route::post('/events/participants/delete/{id}', [ParticipantsController::class, 'UnParticipate']);
 });
