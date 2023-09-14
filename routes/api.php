@@ -31,6 +31,6 @@ Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
 
     Route::get('/participants', [ParticipantsController::class, 'List']);
     Route::get('/participants/{id_event}', [ParticipantsController::class, 'ListParticipants']);
-    Route::post('/events/participants/create', [ParticipantsController::class, 'CreateParticipant']);
-    Route::post('/events/participants/delete/{id}', [ParticipantsController::class, 'UnParticipate']);
+    Route::post('/participant/create', [ParticipantsController::class, 'CreateParticipant']);
+    Route::post('/participant/delete', [ParticipantsController::class, 'UnParticipate']);
 });
