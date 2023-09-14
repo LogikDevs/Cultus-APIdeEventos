@@ -25,7 +25,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
     Route::get('/events', [EventsController::class, 'List']);
     Route::get('/event/interested/{id}', [EventsController::class, 'ListInterested']);
-    Route::get('/event/followed/{id}', [EventsController::class, 'ListFollowed']);
+    Route::get('/event/followed', [EventsController::class, 'ListFollowed']);
     Route::post('/event/create', [EventsController::class, 'CreateEvent']);
     Route::post('/event/interests/create', [EventInterestsController::class, 'CreateEventInterests']);
 

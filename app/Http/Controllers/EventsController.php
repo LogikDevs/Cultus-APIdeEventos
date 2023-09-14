@@ -16,6 +16,28 @@ class EventsController extends Controller
         return Events::all();
     }
 
+    public function ListFollowed(Request $request) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        $id_user = $response['id'];
+
+        $followedEvents = Participants::where('fk_id_user', $id_user)->get();
+        $events = [];
+
+        foreach ($followedEvents as $f) {
+            $event = $this->GetEvent($f['fk_id_event']);
+            foreach ($event as $e) {
+                $admin = $this->GetAdmin($e['id']);
+                $interests = $this->GetInterestsFromEvent($e['id'], $tokenHeader);
+                $event['admin'] = $admin;
+                $event['interests'] = $interests; 
+            }
+
+            $events[] = $event;
+        }
+        return $events;
+    }
+
     public function ListInterested(Request $request) {
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
         $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
@@ -82,30 +104,21 @@ class EventsController extends Controller
         return null;
     }
 
-    public function GetInterestsFromEvent($fk_id_event) {
+    public function GetInterestsFromEvent($fk_id_event, $tokenHeader) {
         $eventInterest = EventInterests::where('fk_id_event', $fk_id_event)->get();
         $int = [];
-        return $this->GetInterestName($eventInterest, $int);
+        return $this->GetInterestName($eventInterest, $int, $tokenHeader);
     }
 
-    public function GetInterestName($eventInterest, $int) {
-        $interests = [];
-
+    public function GetInterestName($eventInterest, $int, $tokenHeader) {
         foreach ($eventInterest as $a) {
             $fk_id_label = $a['fk_id_label'];
             $ruta = getenv("API_AUTH_URL") . "/api/v1/interest/$fk_id_label";
-
-            $response = Http::get($ruta);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['interest'])) {
-                    $interests[] = $data['interest'];
-                }
-            }
+            $response = Http::withHeaders($tokenHeader)->get($ruta);
+            $int[] = $response['interest'];
         }
 
-        return $interests;
+        return $int;
     }
 
     public function UserParticipatesEvent($id_user, $event_id) {
@@ -114,56 +127,6 @@ class EventsController extends Controller
                                   ->first();
         return !is_null($participant);
     }
-
-
-
-
-
-
-
-
-
-
-
-    public function ListFollowed($id_user) {
-        $events = [];
-        $followedEvents = Participants::where('fk_id_user', $id_user)->get();
-        foreach ($followedEvents as $f) {
-            $event = $this->GetEvent($f['fk_id_event']);
-            foreach ($event as $e) {
-                $admin = $this->GetAdmin($e['id']);
-                $interests = $this->GetInterestsFromEvent($e['id']);
-                $event['admin'] = $admin;
-                $event['interests'] = $interests; 
-            }
-
-            $events[] = $event;
-        }
-        return $events;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
