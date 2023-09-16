@@ -2,6 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EventsController;
+use App\Http\Controllers\EventInterestsController;
+use App\Http\Controllers\ParticipantsController;
+use App\Http\Middleware\Autenticacion;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,4 +20,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
+    Route::get('/events', [EventsController::class, 'List']);
+    Route::get('/event/interested', [EventsController::class, 'ListInterested']);
+    Route::get('/event/followed', [EventsController::class, 'ListFollowed']);
+    Route::post('/event/create', [EventsController::class, 'CreateEvent']);
+    Route::post('/event/interests/create', [EventInterestsController::class, 'CreateEventInterests']);
+
+    Route::get('/participants', [ParticipantsController::class, 'List']);
+    Route::get('/participants/{id_event}', [ParticipantsController::class, 'ListParticipants']);
+    Route::post('/participant/create', [ParticipantsController::class, 'CreateParticipant']);
+    Route::post('/participant/delete', [ParticipantsController::class, 'UnParticipate']);
 });

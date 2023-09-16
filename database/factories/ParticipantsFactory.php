@@ -14,6 +14,7 @@ class ParticipantsFactory extends Factory
         return [
             'fk_id_event' => Events::all()->random()->id_event,
             'fk_id_user' => User::all()->random()->id,
+            'rol' => $this->faker->randomElement(['follower', 'moderator', 'admin'])
         ];
     }
 }
