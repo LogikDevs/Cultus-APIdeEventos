@@ -10,7 +10,6 @@ class Autenticacion
 {
     public function handle(Request $request, Closure $next)
     {
-        //return $next($request);
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
 
         $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
