@@ -13,7 +13,7 @@ class EventInterests extends Migration
             $table->unsignedBigInteger('fk_id_event');
             $table->unsignedBigInteger('fk_id_label');
 
-            $table->foreign('fk_id_event')->references('id')->on('events');
+            $table->foreign('fk_id_event')->references('id_event')->on('events');
             $table->foreign('fk_id_label')->references('id_label')->on('interest_label');
 
             $table->unique(['fk_id_event','fk_id_label']);

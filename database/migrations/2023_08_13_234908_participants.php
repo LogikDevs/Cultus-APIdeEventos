@@ -14,7 +14,7 @@ class Participants extends Migration
             $table->unsignedBigInteger('fk_id_user');
             $table->string('rol');
 
-            $table->foreign('fk_id_event')->references('id')->on('events');
+            $table->foreign('fk_id_event')->references('id_event')->on('events');
             $table->foreign('fk_id_user')->references('id')->on('users');
 
             $table->unique(['fk_id_event','fk_id_user']);
