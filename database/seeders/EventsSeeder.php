@@ -16,7 +16,7 @@ class EventsSeeder extends Seeder
             'text' => 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.',
             'start_date' => date('d-m-y H:i'),
             'end_date' => date('d-m-y H:i'),
-            'private' => 0
+            'privacity' => 'Public'
         ]);
 
         Events::factory(10)->create();

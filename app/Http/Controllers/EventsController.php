@@ -16,6 +16,12 @@ class EventsController extends Controller
         return Events::all();
     }
 
+    public function GetUserId(Request $request) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        return $response['id'];
+    }
+
     public function ListFollowed(Request $request) {
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
         $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
@@ -128,11 +134,6 @@ class EventsController extends Controller
     }
 
 
-
-
-
-
-
     public function CreateEvent(Request $request) {
         $eventAll = [];
         $validator = Validator::make($request->all(), [
@@ -142,8 +143,7 @@ class EventsController extends Controller
             'cover' => 'nullable | file | mimes:jpeg,png,mp4 | max:2048',
             'start_date' => 'required | date | after_or_equal:now',
             'end_date' => 'required | date | after:start_date',
-            'private' => 'required | boolean',
-            'id_user' => 'required | exists:users,id'
+            'private' => 'required | boolean'
         ]);
 
         if ($validator->fails()) {
@@ -153,11 +153,9 @@ class EventsController extends Controller
     
         $event = $this->SaveEvent($request);
         $admin = $this->SaveAdmin($request, $event);
-        //$interests = $this->SaveInterests($request, $event);
         
         $newCreatedEvent = $event;
         $newCreatedEvent['admin'] = $this->GetAdmin($event['id_event']);
-        //$newCreatedEvent['interests'] = $this->GetInterestsFromEvent($event['id_event']);
         return $newCreatedEvent;
     }
 
@@ -183,29 +181,13 @@ class EventsController extends Controller
     }
 
     public function SaveAdmin(request $request, $event) {
+        $id_user = $this->GetUserId($request);
         $newAdmin = new Participants();
-        $newAdmin -> fk_id_user = $request->input('id_user');
+        $newAdmin -> fk_id_user = $id_user;
         $newAdmin -> fk_id_event = $event->id_event;
         $newAdmin -> rol = 'admin';
         $newAdmin -> save();
 
         return $newAdmin;
     }
-
-/*
-    public function SaveInterests($labels, $event) {
-        foreach ($labels as $l) {
-    /*
-        $validation = $request->validate([
-            'fk_id_label'=>'required | exists:interest_label,id_label',
-            'fk_id_post'=>'required | exists:post,id_post'
-        ]);
-
-        $characterize = Characterizes::create($validation);
-        return response()->json($characterize, 201);
-    /
-    }
-*/
-
-
 }
