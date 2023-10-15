@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\EventInterestsController;
 use App\Http\Controllers\ParticipantsController;
-use App\Http\Middleware\Autenticacion;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
+Route::prefix('v1')->middleware('auth:api')->group(function(){
     Route::get('/events', [EventsController::class, 'List']);
     Route::get('/event/interested', [EventsController::class, 'ListInterested']);
     Route::get('/event/followed', [EventsController::class, 'ListFollowed']);
