@@ -68,8 +68,10 @@ class EventsController extends Controller
                 $eventU[$event[0]['id']] = $event[0];
                 $admin = $this->GetAdmin($event[0]['id']);
                 $interests = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
+                $updates = $this->GetEventUpdates($event[0]['id'], $tokenHeader);
                 $eventU[$event[0]['id']]['admin'] = $admin;
                 $eventU[$event[0]['id']]['interests'] = $interests;
+                $eventU[$event[0]['id']]['updates'] = $updates  ;
             }
         }
         $events = array_values($eventU);
