@@ -36,7 +36,7 @@ class EventsController extends Controller
                 $admin = $this->GetAdmin($e['id']);
                 $interests = $this->GetInterestsFromEvent($e['id'], $tokenHeader);
                 $event['admin'] = $admin;
-                $event['interests'] = $interests; 
+                $event['interests'] = $interests;
             }
 
             $events[] = $event;
@@ -133,6 +133,10 @@ class EventsController extends Controller
         return !is_null($participant);
     }
 
+    public function GetEventUpdates ($fk_id_event, $tokenHeader) {
+        $ruta = getenv("API_POST_URL") . "/api/v1/posts/event/$fk_id_event";
+        return $response = Http::withHeaders($tokenHeader)->get($ruta);
+    }
 
     public function CreateEvent(Request $request) {
         $eventAll = [];
