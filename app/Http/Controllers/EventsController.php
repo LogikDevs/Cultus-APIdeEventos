@@ -51,6 +51,7 @@ class EventsController extends Controller
 
         $events = [];
         $eventU = [];
+        $eventUpdates = [];
         $interests = $this->GetUserInterests($request, $id_user);
 
         foreach ($interests as $i) {
@@ -69,9 +70,10 @@ class EventsController extends Controller
                 $admin = $this->GetAdmin($event[0]['id']);
                 $interests = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
                 $updates = $this->GetEventUpdates($event[0]['id'], $tokenHeader);
+                $eventUpdates = $updates->json(); 
                 $eventU[$event[0]['id']]['admin'] = $admin;
                 $eventU[$event[0]['id']]['interests'] = $interests;
-                $eventU[$event[0]['id']]['updates'] = $updates  ;
+                $eventU[$event[0]['id']]['updates'] = $eventUpdates;
             }
         }
         $events = array_values($eventU);
