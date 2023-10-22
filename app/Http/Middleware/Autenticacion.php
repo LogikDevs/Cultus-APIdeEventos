@@ -12,7 +12,6 @@ class Autenticacion
     {
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
         $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
-        echo $response;
         
         if($response -> successful())
             return $next($request);
