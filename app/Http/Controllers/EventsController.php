@@ -35,8 +35,11 @@ class EventsController extends Controller
             foreach ($event as $e) {
                 $admin = $this->GetAdmin($e['id']);
                 $interests = $this->GetInterestsFromEvent($e['id'], $tokenHeader);
-                $event['admin'] = $admin;
-                $event['interests'] = $interests;
+                $eventUpdates = $this->GetEventUpdates($e['id'], $tokenHeader);
+                $updates = $eventUpdates->json();
+                $event[0]['admin'] = $admin;
+                $event[0]['interests'] = $interests;
+                $event[0]['updates'] = $updates;
             }
 
             $events[] = $event;
