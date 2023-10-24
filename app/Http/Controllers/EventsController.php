@@ -47,91 +47,53 @@ class EventsController extends Controller
         $event = $this->GetEvent($eventId);
         $event['admin'] = $this->GetAdmin($event[0]['id']);
         $event['interests'] = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
+        //return $event['interests'];
         $event['updates'] = $this->GetEventUpdates($event[0]['id'], $tokenHeader)->json();
 
         return $event;
     }
 
-/*
     public function ListInterested(Request $request) {
-        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
-        $id_user = $response['id'];
-
-        $events = [];
-        $eventU = [];
-        $eventUpdates = [];
+        $tokenHeader = ["Authorization" => $request->header("Authorization")];
+        $id_user = $this->GetUserId($request);
         $interests = $this->GetUserInterests($request, $id_user);
 
-        foreach ($interests as $i) {
-            $eventInterests = $this->GetEventInterests($i['id_label']);
-            foreach ($eventInterests as $e) {
-                $event = $this->GetEvent($e['fk_id_event']);
+        $eventDetails = $this->GetInterestedEventDetails($interests, $id_user, $tokenHeader);
 
-                if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
-                    continue;
-                }
-                if ($this->UserParticipatesEvent($id_user, $event[0]['id'])) {
-                    continue;
-                }
-                
-                $eventU[$event[0]['id']] = $event[0];
-                $admin = $this->GetAdmin($event[0]['id']);
-                $interests = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
-                $updates = $this->GetEventUpdates($event[0]['id'], $tokenHeader);
-                $eventUpdates = $updates->json(); 
-                $eventU[$event[0]['id']]['admin'] = $admin;
-                $eventU[$event[0]['id']]['interests'] = $interests;
-                $eventU[$event[0]['id']]['updates'] = $eventUpdates;
-            }
+        return array_values($eventDetails);
+    }
+
+    private function GetInterestedEventDetails($interests, $id_user, $tokenHeader) {
+        $eventDetails = [];
+
+        foreach ($interests as $interest) {
+            $eventInterests = $this->GetEventInterests($interest['id_label']);
+            $events= $this->GetEventFromInterest($eventInterests, $id_user, $tokenHeader);
         }
-        $events = array_values($eventU);
+
         return $events;
     }
-*/
 
 
-
-
-
-public function ListInterested(Request $request)
-{
-    $tokenHeader = ["Authorization" => $request->header("Authorization")];
-    $id_user = $this->GetUserId($request);
-    $interests = $this->GetUserInterests($request, $id_user);
-
-    $eventDetails = $this->GetInterestedEventDetails($interests, $id_user, $tokenHeader);
-
-    return array_values($eventDetails);
-}
-
-private function GetInterestedEventDetails($interests, $id_user, $tokenHeader)
-{
-    $eventDetails = [];
-
-    foreach ($interests as $interest) {
-        $eventInterests = $this->GetEventInterests($interest['id_label']);
+    public function GetEventFromInterest($eventInterests, $id_user, $tokenHeader) {
         foreach ($eventInterests as $eventInterest) {
             $event = $this->GetEventDetails($eventInterest['fk_id_event'], $tokenHeader);
+
 
             if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
                 continue;
             }
-
-            // Verificar si el usuario ya participa en el evento
+    
             if ($this->UserParticipatesEvent($id_user, $event[0]['id'])) {
                 continue;
             }
 
+
             $eventDetails[$event[0]['id']] = $event;
         }
+        
+        return $eventDetails;
     }
-
-    return $eventDetails;
-}
-
-
-
 
     public function GetUserInterests(Request $request, $id_user) {
         $route = getenv("API_AUTH_URL") . "/api/v1/likes/user/$id_user";
@@ -177,8 +139,10 @@ private function GetInterestedEventDetails($interests, $id_user, $tokenHeader)
             $fk_id_label = $a['fk_id_label'];
             $ruta = getenv("API_AUTH_URL") . "/api/v1/interest/$fk_id_label";
             $response = Http::withHeaders($tokenHeader)->get($ruta);
-            return $response;
-            $int[] = $response['interest'];
+
+            if ($response->successful() && isset($response['interest'])) {
+                $int[] = $response['interest'];
+            }
         }
 
         return $int;
