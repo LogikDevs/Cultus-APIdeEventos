@@ -7,6 +7,7 @@ use App\Models\Participants;
 use App\Models\EventInterests;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,64 +17,83 @@ class EventsController extends Controller
         return Events::all();
     }
 
+
     public function GetUserId(Request $request) {
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
-        return $response['id'];
+        $user = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
+        return $user['id'];
     }
 
     public function ListFollowed(Request $request) {
-        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
-        $id_user = $response['id'];
+        $tokenHeader = ["Authorization" => $request->header("Authorization")];
+        $id_user = $this->GetUserId($request);
+        $events = $this->GetFollowedEventsDetails($id_user, $tokenHeader);
 
+        return $events;
+    }
+
+    private function GetFollowedEventsDetails($id_user, $tokenHeader) {
         $followedEvents = Participants::where('fk_id_user', $id_user)->get();
         $events = [];
 
         foreach ($followedEvents as $f) {
-            $event = $this->GetEvent($f['fk_id_event']);
-            foreach ($event as $e) {
-                $admin = $this->GetAdmin($e['id']);
-                $interests = $this->GetInterestsFromEvent($e['id'], $tokenHeader);
-                $event['admin'] = $admin;
-                $event['interests'] = $interests; 
-            }
-
+            $event = $this->GetEventDetails($f['fk_id_event'], $tokenHeader);
             $events[] = $event;
         }
+
         return $events;
     }
 
-    public function ListInterested(Request $request) {
-        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-        $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
-        $id_user = $response['id'];
+    private function GetEventDetails($eventId, $tokenHeader) {
+        $event = $this->GetEvent($eventId);
+        $event['admin'] = $this->GetAdmin($event[0]['id']);
+        $event['interests'] = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
+        //return $event['interests'];
+        $event['updates'] = $this->GetEventUpdates($event[0]['id'], $tokenHeader)->json();
 
-        $events = [];
-        $eventU = [];
+        return $event;
+    }
+
+    public function ListInterested(Request $request) {
+        $tokenHeader = ["Authorization" => $request->header("Authorization")];
+        $id_user = $this->GetUserId($request);
         $interests = $this->GetUserInterests($request, $id_user);
 
-        foreach ($interests as $i) {
-            $eventInterests = $this->GetEventInterests($i['id_label']);
-            foreach ($eventInterests as $e) {
-                $event = $this->GetEvent($e['fk_id_event']);
+        $eventDetails = $this->GetInterestedEventDetails($interests, $id_user, $tokenHeader);
 
-                if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
-                    continue;
-                }
-                if ($this->UserParticipatesEvent($id_user, $event[0]['id'])) {
-                    continue;
-                }
-                
-                $eventU[$event[0]['id']] = $event[0];
-                $admin = $this->GetAdmin($event[0]['id']);
-                $interests = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
-                $eventU[$event[0]['id']]['admin'] = $admin;
-                $eventU[$event[0]['id']]['interests'] = $interests;
-            }
+        return array_values($eventDetails);
+    }
+
+    private function GetInterestedEventDetails($interests, $id_user, $tokenHeader) {
+        $eventDetails = [];
+
+        foreach ($interests as $interest) {
+            $eventInterests = $this->GetEventInterests($interest['id_label']);
+            $events= $this->GetEventFromInterest($eventInterests, $id_user, $tokenHeader);
         }
-        $events = array_values($eventU);
+
         return $events;
+    }
+
+
+    public function GetEventFromInterest($eventInterests, $id_user, $tokenHeader) {
+        foreach ($eventInterests as $eventInterest) {
+            $event = $this->GetEventDetails($eventInterest['fk_id_event'], $tokenHeader);
+
+
+            if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
+                continue;
+            }
+    
+            if ($this->UserParticipatesEvent($id_user, $event[0]['id'])) {
+                continue;
+            }
+
+
+            $eventDetails[$event[0]['id']] = $event;
+        }
+        
+        return $eventDetails;
     }
 
     public function GetUserInterests(Request $request, $id_user) {
@@ -92,8 +112,8 @@ class EventsController extends Controller
         return EventInterests::where('fk_id_label', $fk_id_label)->get();
     }
 
-    public function GetEvent($fk_id_event) {
-        return Events::where('id', $fk_id_event)->get();
+    public function GetEvent($eventId) {
+        return Events::where('id', $eventId)->get();
     }
 
     private function GetAdmin($eventId) {
@@ -120,7 +140,10 @@ class EventsController extends Controller
             $fk_id_label = $a['fk_id_label'];
             $ruta = getenv("API_AUTH_URL") . "/api/v1/interest/$fk_id_label";
             $response = Http::withHeaders($tokenHeader)->get($ruta);
-            $int[] = $response['interest'];
+
+            if ($response->successful() && isset($response['interest'])) {
+                $int[] = $response['interest'];
+            }
         }
 
         return $int;
@@ -133,9 +156,12 @@ class EventsController extends Controller
         return !is_null($participant);
     }
 
+    public function GetEventUpdates ($fk_id_event, $tokenHeader) {
+        $ruta = getenv("API_POST_URL") . "/api/v1/posts/event/$fk_id_event";
+        return $response = Http::withHeaders($tokenHeader)->get($ruta);
+    }
 
     public function CreateEvent(Request $request) {
-        $eventAll = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'description' => 'nullable | max:200',
@@ -146,14 +172,21 @@ class EventsController extends Controller
             'private' => 'required | boolean'
         ]);
 
+        return $this->ValidateNewEvent($request, $validator);
+    }
+
+    
+    public function ValidateNewEvent(Request $request, $validator) {        
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
-
-    
+        
         $event = $this->SaveEvent($request);
         $admin = $this->SaveAdmin($request, $event);
-        
+        return $this->ReturnNewEvent($event, $admin);
+    }
+
+    public function ReturnNewEvent($event, $admin) {        
         $newCreatedEvent = $event;
         $newCreatedEvent['admin'] = $this->GetAdmin($event['id_event']);
         return $newCreatedEvent;
@@ -171,9 +204,21 @@ class EventsController extends Controller
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
-        $newEvent -> save();
-            
-        return $newEvent;
+        
+        try {
+            DB::raw('LOCK TABLE events WRITE');
+            DB::beginTransaction();
+            $newEvent -> save();
+            DB::commit();
+            DB::raw('UNLOCK TABLES');
+            return $newEvent;
+        } catch (\Illuminate\Database\QueryException $th) {
+            DB::rollback();
+            return $th->getMessage();
+        }
+        catch (\PDOException $th) {
+            return response("Permission to DB denied",403);
+        }
     }
     
     public function ValidateCover(Request $request) {        

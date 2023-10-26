@@ -15,7 +15,7 @@ class EventsFactory extends Factory
             'text' => $this->faker->paragraph(),
             'start_date' => $this->faker->dateTime(),
             'end_date' => $this->faker->dateTime(),
-            'privacity' => $this->faker->randomElement(['Private', 'Public'])
+            'private' => $this->faker->boolean()
         ];
     }
 }
