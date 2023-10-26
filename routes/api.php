@@ -18,7 +18,7 @@ use App\Http\Middleware\Autenticacion;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(Autenticacion::class)->get('/user', function (Request $request) {
     return $request->user();
 });
 
