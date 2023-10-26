@@ -49,8 +49,8 @@ class EventsController extends Controller
         $event['interests'] = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
         //return $event['interests'];
         $event['updates'] = $this->GetEventUpdates($event[0]['id'], $tokenHeader)->json();
-
-        return $event;
+        
+            return $event;
     }
 
     public function ListInterested(Request $request) {
