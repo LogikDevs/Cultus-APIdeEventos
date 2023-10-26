@@ -205,6 +205,10 @@ class EventsController extends Controller
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
         
+        return $this->TransactionSaveEvent($newEvent);
+    }
+    
+    public function TransactionSaveEvent($newEvent) {        
         try {
             DB::raw('LOCK TABLE events WRITE');
             DB::beginTransaction();
@@ -220,7 +224,7 @@ class EventsController extends Controller
             return response("Permission to DB denied",403);
         }
     }
-    
+
     public function ValidateCover(Request $request) {        
         if ($request->hasFile('cover')){
             $image = $request->file('cover');
