@@ -33,7 +33,7 @@ class EventsController extends Controller
 
     public function ListInterested(Request $request) {
         $tokenHeader = ["Authorization" => $request->header("Authorization")];
-        $id_user = $this->GetUserId($request);
+        $id_user = $this->GetUserId($request); 
         $interests = $this->GetUserInterests($request, $id_user);
         $eventDetails = $this->GetInterestedEventDetails($interests, $id_user, $tokenHeader);
 
@@ -120,7 +120,7 @@ class EventsController extends Controller
 
         foreach ($interests as $interest) {
             $eventInterests = $this->GetEventInterests($interest['id_label']);
-            $events= $this->GetEventFromInterest($eventInterests, $id_user, $tokenHeader);
+            $events= $this->GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader);
         }
 
         return $events;
@@ -130,7 +130,7 @@ class EventsController extends Controller
         return EventInterests::where('fk_id_label', $fk_id_label)->get();
     }
 
-    public function GetEventFromInterest($eventInterests, $id_user, $tokenHeader) {
+    public function GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader) {
         foreach ($eventInterests as $eventInterest) {
             $event = $this->GetEventDetails($eventInterest['fk_id_event'], $tokenHeader);
 
