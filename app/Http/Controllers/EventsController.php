@@ -235,6 +235,23 @@ class EventsController extends Controller
         $newAdmin -> rol = 'admin';
         $newAdmin -> save();
 
-        return $newAdmin;
+        return $this->TransactionSaveAdmin($newAdmin);
+    }
+
+    public function TransactionSaveAdmin($newEvent) {        
+        try {
+            DB::raw('LOCK TABLE participants WRITE');
+            DB::beginTransaction();
+            $newAdmin -> save();
+            DB::commit();
+            DB::raw('UNLOCK TABLES');
+            return $newAdmin;
+        } catch (\Illuminate\Database\QueryException $th) {
+            DB::rollback();
+            return $th->getMessage();
+        }
+        catch (\PDOException $th) {
+            return response("Permission to DB denied",403);
+        }
     }
 }
