@@ -7,6 +7,7 @@ use App\Models\Participants;
 use App\Models\EventInterests;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
@@ -161,7 +162,6 @@ class EventsController extends Controller
     }
 
     public function CreateEvent(Request $request) {
-        $eventAll = [];
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'description' => 'nullable | max:200',
@@ -172,14 +172,21 @@ class EventsController extends Controller
             'private' => 'required | boolean'
         ]);
 
+        return $this->ValidateNewEvent($request, $validator);
+    }
+
+    
+    public function ValidateNewEvent(Request $request, $validator) {        
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
-
-    
+        
         $event = $this->SaveEvent($request);
         $admin = $this->SaveAdmin($request, $event);
-        
+        return $this->ReturnNewEvent($event, $admin);
+    }
+
+    public function ReturnNewEvent($event, $admin) {        
         $newCreatedEvent = $event;
         $newCreatedEvent['admin'] = $this->GetAdmin($event['id_event']);
         return $newCreatedEvent;
@@ -201,9 +208,21 @@ class EventsController extends Controller
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
-        $newEvent -> save();
-            
-        return $newEvent;
+        
+        try {
+            DB::raw('LOCK TABLE events WRITE');
+            DB::beginTransaction();
+            $newEvent -> save();
+            DB::commit();
+            DB::raw('UNLOCK TABLES');
+            return $newEvent;
+        } catch (\Illuminate\Database\QueryException $th) {
+            DB::rollback();
+            return $th->getMessage();
+        }
+        catch (\PDOException $th) {
+            return response("Permission to DB denied",403);
+        }
     }
 
     public function SaveAdmin(request $request, $event) {
