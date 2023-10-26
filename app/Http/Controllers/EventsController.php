@@ -162,22 +162,27 @@ class EventsController extends Controller
     public function SaveEvent(request $request) {
         $newEvent = new Events();
 
-        if ($request->hasFile('cover')){
-            $image = $request->file('cover');
-            $imageExtension = $image->getClientOriginalExtension();
-            $path = $image->store('/public/cover_event');
-            $newEvent -> cover = basename($path);
-        }
+        $cover = $this->ValidateCover($request);
         
         $newEvent -> name = $request->input('name');
         $newEvent -> description = $request->input('description');
         $newEvent -> text = $request->input('text');
+        $newEvent -> cover = basename($cover);
         $newEvent -> start_date = $request->input('start_date');
         $newEvent -> end_date = $request->input('end_date');
         $newEvent -> private = $request->input('private');
         $newEvent -> save();
             
         return $newEvent;
+    }
+    
+    public function ValidateCover(Request $request) {        
+        if ($request->hasFile('cover')){
+            $image = $request->file('cover');
+            $imageExtension = $image->getClientOriginalExtension();
+            $path = $image->store('/public/cover_event');
+            return $path;
+        }
     }
 
     public function SaveAdmin(request $request, $event) {
