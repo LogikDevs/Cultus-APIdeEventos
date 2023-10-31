@@ -23,6 +23,11 @@ class EventsController extends Controller
         return $user['id'];
     }
 
+    public function ListOne(Request $request, $id_event) {
+        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
+        return $this->GetEventDetails($id_event, $tokenHeader);
+    }
+
     public function ListFollowed(Request $request) {
         $tokenHeader = ["Authorization" => $request->header("Authorization")];
         $id_user = $this->GetUserId($request);
