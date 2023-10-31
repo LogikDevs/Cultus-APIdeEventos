@@ -61,9 +61,10 @@ class EventsController extends Controller
         $event = $this->GetEvent($eventId);
         $event['admin'] = $this->GetAdmin($event[0]['id']);
         $event['interests'] = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
+        $event['participants'] = $this->GetEventParticipants($event[0]['id']);
         $event['updates'] = $this->GetEventUpdates($event[0]['id'], $tokenHeader)->json();
         
-            return $event;
+        return $event;
     }
 
     public function GetEvent($eventId) {
@@ -101,6 +102,21 @@ class EventsController extends Controller
         }
 
         return $int;
+    }
+
+    public function GetEventParticipants($eventId) {
+        $participants = Participants::where('fk_id_event', $eventId)->get();
+        $participantData = [];
+
+        foreach ($participants as $participant) {
+            $participantData[] = [
+                'name' => $participant->user->name,
+                'surname' => $participant->user->surname,
+                'rol' => $participant->rol,
+            ];
+        }
+
+        return $participantData;
     }
 
     public function GetEventUpdates ($fk_id_event, $tokenHeader) {
