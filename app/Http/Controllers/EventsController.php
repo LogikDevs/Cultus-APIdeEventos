@@ -238,7 +238,7 @@ class EventsController extends Controller
         return $this->TransactionSaveAdmin($newAdmin);
     }
 
-    public function TransactionSaveAdmin($newEvent) {        
+    public function TransactionSaveAdmin($newAdmin) {        
         try {
             DB::raw('LOCK TABLE participants WRITE');
             DB::beginTransaction();
