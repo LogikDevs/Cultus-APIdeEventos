@@ -24,6 +24,7 @@ Route::middleware(Autenticacion::class)->get('/user', function (Request $request
 
 Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
     Route::get('/events', [EventsController::class, 'List']);
+    Route::get('/events/{d}', [EventsController::class, 'ListOne']);
     Route::get('/event/interested', [EventsController::class, 'ListInterested']);
     Route::get('/event/followed', [EventsController::class, 'ListFollowed']);
     Route::post('/event/create', [EventsController::class, 'CreateEvent']);
