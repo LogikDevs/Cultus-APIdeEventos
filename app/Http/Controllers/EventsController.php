@@ -79,6 +79,7 @@ class EventsController extends Controller
             return [
                 'name' => $adminParticipant->user->name,
                 'surname' => $adminParticipant->user->surname,
+                'profile_pic' => $adminParticipant->user->profile_pic,
             ];
         }
         return null;
@@ -112,6 +113,7 @@ class EventsController extends Controller
             $participantData[] = [
                 'name' => $participant->user->name,
                 'surname' => $participant->user->surname,
+                'profile_pic' => $participant->user->profile_pic,
                 'rol' => $participant->rol,
             ];
         }
