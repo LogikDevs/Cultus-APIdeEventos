@@ -73,10 +73,11 @@ class EventsController extends Controller
 
     private function GetAdmin($eventId) {
         $adminParticipant = Participants::where('fk_id_event', $eventId)
-                                        ->where('rol', 'admin')
+                                        //->where('fk_id_user', 'rol', 'admin')
                                         ->first();
         if ($adminParticipant) {
             return [
+                'id' => $adminParticipant->user->id,
                 'name' => $adminParticipant->user->name,
                 'surname' => $adminParticipant->user->surname,
                 'profile_pic' => $adminParticipant->user->profile_pic,
@@ -111,6 +112,7 @@ class EventsController extends Controller
 
         foreach ($participants as $participant) {
             $participantData[] = [
+                'id' => $participant->user->id,
                 'name' => $participant->user->name,
                 'surname' => $participant->user->surname,
                 'profile_pic' => $participant->user->profile_pic,
