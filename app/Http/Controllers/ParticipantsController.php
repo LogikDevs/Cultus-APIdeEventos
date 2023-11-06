@@ -38,7 +38,7 @@ class ParticipantsController extends Controller
 
     private function GetUser($fk_id_user) {
         $user = User::find($fk_id_user);
-        return $user->only(['name', 'surname', 'profile_pic']);
+        return $user->only(['id', 'name', 'surname', 'profile_pic']);
     }
 
     public function CreateParticipant(Request $request) {

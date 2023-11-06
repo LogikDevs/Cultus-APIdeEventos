@@ -13,8 +13,11 @@ class Autenticacion
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
         $response = Http::withHeaders($tokenHeader)->get(getenv("API_AUTH_URL") . "/api/v1/validate");
         
-        if($response -> successful())
+        if($response -> successful()) {
+            $userData = $response->json();
+            $request->merge(['user' => $userData]);
             return $next($request);
+        }
         
         return response(['message' => 'Not Allowed'], 403);
     }
