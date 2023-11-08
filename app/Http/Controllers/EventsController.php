@@ -108,13 +108,13 @@ class EventsController extends Controller
     public function List(Request $request) {
         return Events::all();
     }
-/*
+
     public function ListOne(Request $request, $id_event) {
         $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-        return response ($this->GetEventDetails($request, $id_event), 200);
-        //return $this->GetEventDetails($id_event, $tokenHeader);
+        $event = $this->GetEvent($id_event);
+        return response ($this->GetEventDetails($request, $event), 200);
     }
-*/
+
     public function ListFollowed(Request $request) {
         $user = $this->GetUser($request);
         $followedEvents = Participants::where('fk_id_user', $user['id'])->get();
@@ -128,9 +128,13 @@ class EventsController extends Controller
         $tokenHeader = ["Authorization" => $request->header("Authorization")];
         $user = $this->GetUser($request); 
         $interests = $this->GetUserInterests($request, $user['id']);
-        $eventDetails = $this->GetInterestedEventDetails($interests, $user['id'], $tokenHeader);
 
-        return array_values($eventDetails);
+        if ($interests) {
+            $eventDetails = $this->GetInterestedEventDetails($interests, $user['id'], $tokenHeader);
+            return array_values($eventDetails);
+        }
+
+        return response ("No tienes intereses seleccionados", 204);
     }
 
     public function GetUserInterests(Request $request, $id_user) {
@@ -166,10 +170,14 @@ class EventsController extends Controller
 
         foreach ($interests as $interest) {
             $eventInterests = $this->GetEventInterests($interest['id_label']);
-            $events= $this->GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader);
+            $events = $this->GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader);
         }
 
-        return $events;
+        if ($events) {
+            return response ($events, 200);
+        }
+
+        return null;
     }
 
     public function GetEventInterests($fk_id_label) {
