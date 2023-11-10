@@ -19,17 +19,6 @@ class EventsController extends Controller
     }
 
     public function GetEventDetails(Request $request, $eventToList) {
-    /*
-        $tokenHeader = [ "Authorization" => $request -> header("Authorization")];
-
-        $event = $this->GetEvent($eventId);
-        $event['admin'] = $this->GetAdmin($event[0]['id']);
-        $event['interests'] = $this->GetInterestsFromEvent($event[0]['id'], $tokenHeader);
-        $event['participants'] = $this->GetEventParticipants($event[0]['id']);
-        $event['updates'] = $this->GetEventUpdates($event[0]['id'], $tokenHeader)->json();
-
-        return response ($event, 200);
-    */
         $tokenHeader = [ "Authorization" => $request->header("Authorization")];
 
         $event['event'] = $eventToList;
@@ -102,7 +91,13 @@ class EventsController extends Controller
 
     public function GetEventUpdates ($fk_id_event, $tokenHeader) {
         $ruta = getenv("API_POST_URL") . "/api/v1/posts/event/$fk_id_event";
-        return $response = Http::withHeaders($tokenHeader)->get($ruta);
+        $updates = $response = Http::withHeaders($tokenHeader)->get($ruta);
+
+        if ($updates->successful()) {
+            return $updates->json();
+        } else {
+            return null;
+        }
     }
 
     public function List(Request $request) {
@@ -118,7 +113,6 @@ class EventsController extends Controller
     public function ListFollowed(Request $request) {
         $user = $this->GetUser($request);
         $followedEvents = Participants::where('fk_id_user', $user['id'])->get();
-
         $events = $this->GetFollowedEvents($request, $followedEvents, $user['id']);
 
         return $events;
@@ -126,16 +120,44 @@ class EventsController extends Controller
 
     public function ListInterested(Request $request) {
         $tokenHeader = ["Authorization" => $request->header("Authorization")];
-        $user = $this->GetUser($request); 
+        $user = $this->GetUser($request);
         $interests = $this->GetUserInterests($request, $user['id']);
 
         if ($interests) {
-            $eventDetails = $this->GetInterestedEventDetails($interests, $user['id'], $tokenHeader);
-            return array_values($eventDetails);
+            $interestedData = $this->GetInterestedData($request, $interests);
+            return $interestedData;
         }
 
         return response ("No tienes intereses seleccionados", 204);
     }
+
+    public function GetInterestedData(Request $request, $interests) {
+        foreach ($interests as $i) {
+            $eventInterests = $this->GetEventInterests($i['id_label']);
+            $events = $this->GetEventInformation($request, $eventInterests);
+        }
+        
+        return $events;
+    }
+
+    public function GetEventInterests($fk_id_label) {
+        return EventInterests::where('fk_id_label', $fk_id_label)->get();
+    }
+
+    public function GetEventInformation(Request $request, $eventInterests) {
+        foreach ($eventInterests as $e) {
+            $event = $this->GetEvent($e['fk_id_event']);
+            $eventDetails = $this->GetEventDetails($request, $event);
+        }
+
+        return $eventDetails;
+    }
+
+
+
+
+
+
 
     public function GetUserInterests(Request $request, $id_user) {
         $route = getenv("API_AUTH_URL") . "/api/v1/likes/user/$id_user";
@@ -152,26 +174,24 @@ class EventsController extends Controller
     private function GetFollowedEvents(Request $request, $followedEvents, $id_user) {
         $events = [];
         $tokenHeader = ["Authorization" => $request->header("Authorization")];
-        //return $followedEvents;
 
         foreach ($followedEvents as $f) {
             $event = $this->GetEvent($f['fk_id_event']);
             $eventDetails = $this->GetEventDetails($request, $event);
-            //return $eventDetails;
             $events[] = $eventDetails;
-            //$events = array_merge($events, $eventDetails);
         }
 
         return $events;
     }
 
-    private function GetInterestedEventDetails($interests, $id_user, $tokenHeader) {
+    private function GetInterestedEventDetails(Request $request, $interests, $id_user, $tokenHeader) {
         $eventDetails = [];
 
         foreach ($interests as $interest) {
             $eventInterests = $this->GetEventInterests($interest['id_label']);
-            $events = $this->GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader);
+            $events = $this->GetEventFromInterest($request, $eventInterests, $eventDetails, $id_user, $tokenHeader);
         }
+        return $eventInterests;
 
         if ($events) {
             return response ($events, 200);
@@ -180,13 +200,9 @@ class EventsController extends Controller
         return null;
     }
 
-    public function GetEventInterests($fk_id_label) {
-        return EventInterests::where('fk_id_label', $fk_id_label)->get();
-    }
-
-    public function GetEventFromInterest($eventInterests, $eventDetails, $id_user, $tokenHeader) {
+    public function GetEventFromInterest(Request $request, $eventInterests, $eventDetails, $id_user, $tokenHeader) {
         foreach ($eventInterests as $eventInterest) {
-            $event = $this->GetEventDetails($eventInterest['fk_id_event'], $tokenHeader);
+            $event = $this->GetEventDetails($request, $tokenHeader);
 
             if ($event[0]['private'] && !$this->UserParticipatesEvent($id_user, $event[0]['id'])) {
                 continue;
