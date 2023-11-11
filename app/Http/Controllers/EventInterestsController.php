@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Validator;
 
 class EventInterestsController extends Controller
 {
+    public function GetEvent($eventId) {
+        return EventInterests::where('fk_id_event', $eventId)->get();
+    }
+
     public function CreateEventInterests(Request $request) {
         $validator = Validator::make($request->all(), [
             'fk_id_label'=>'required | exists:interest_label,id_label',
