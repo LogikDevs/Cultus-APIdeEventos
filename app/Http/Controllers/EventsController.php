@@ -91,9 +91,9 @@ class EventsController extends Controller
 
         if ($updates->successful()) {
             return $updates->json();
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     public function GetEvent($eventId) {
@@ -144,11 +144,13 @@ class EventsController extends Controller
         $user = $this->GetUser($request);
         $interests = $this->GetUserInterests($request, $user['id']);
 
-            if ($interests) {
-                $events = $this->GetInterestedData($request, $interests);
-                return $this->FilterPrivateEvents($events);
-                return $publicEvents;
-            }
+        if ($interests) {
+            $events = $this->GetInterestedData($request, $interests);
+            $filteredEvents = $this->FilterPrivateEvents($events);
+            $totalEvents = array_values($filteredEvents);
+
+            return response($totalEvents, 200);
+        }
 
         return response("No tienes intereses seleccionados", 204);
     }
@@ -166,10 +168,10 @@ class EventsController extends Controller
     }
 
     public function GetInterestedData(Request $request, $interests) {
+        $events = [];
         foreach ($interests as $i) {
             $eventInterests = $this->GetEventInterests($i['id_label']);
-            $events = $this->GetEventInformation($request, $eventInterests);
-            return $events;
+            $events = array_merge($events, $this->GetEventInformation($request, $eventInterests));
         }
         
         return $events;
