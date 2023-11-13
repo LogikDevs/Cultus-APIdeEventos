@@ -147,9 +147,10 @@ class EventsController extends Controller
         if ($interests) {
             $events = $this->GetInterestedData($request, $interests);
             $filteredEvents = $this->FilterPrivateEvents($events);
-            $totalEvents = array_values($filteredEvents);
-
-            return response($totalEvents, 200);
+            $filteredEvents = array_unique($filteredEvents, SORT_REGULAR);
+            $formattedEvents = array_values($filteredEvents);
+    
+            return response($formattedEvents, 200);
         }
 
         return response("No tienes intereses seleccionados", 204);
