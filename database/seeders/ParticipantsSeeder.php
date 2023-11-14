@@ -25,7 +25,12 @@ class ParticipantsSeeder extends Seeder
 
     public function run()
     {
-        $this -> CreateUsers();
+        $this -> CreateUsers();        
+        DB::table('participants')->insert([
+            'fk_id_event' => 1,
+            'fk_id_user' => 1,
+            'rol' => 'follower'
+        ]);
         Participants::factory(10)->create();
     }
 }

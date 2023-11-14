@@ -18,19 +18,24 @@ use App\Http\Middleware\Autenticacion;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(Autenticacion::class)->get('/user', function (Request $request) {
     return $request->user();
 });
 
 Route::prefix('v1')->middleware(Autenticacion::class)->group(function(){
     Route::get('/events', [EventsController::class, 'List']);
+    Route::get('/events/{d}', [EventsController::class, 'ListOne']);
+    Route::get('/event/admin/{id_event}', [EventsController::class, 'GetAdmin']);
     Route::get('/event/interested', [EventsController::class, 'ListInterested']);
     Route::get('/event/followed', [EventsController::class, 'ListFollowed']);
     Route::post('/event/create', [EventsController::class, 'CreateEvent']);
+
     Route::post('/event/interests/create', [EventInterestsController::class, 'CreateEventInterests']);
+    Route::post('/interests/{d}', [EventInterestsController::class, 'GetEvent']);
 
     Route::get('/participants', [ParticipantsController::class, 'List']);
     Route::get('/participants/{id_event}', [ParticipantsController::class, 'ListParticipants']);
     Route::post('/participant/create', [ParticipantsController::class, 'CreateParticipant']);
     Route::post('/participant/delete', [ParticipantsController::class, 'UnParticipate']);
+    Route::post('/participates/{id_event}', [ParticipantsController::class, 'AsignRoleToParticipant']);
 });
